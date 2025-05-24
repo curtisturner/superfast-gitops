@@ -1,0 +1,50 @@
+name: Publish Helm Chart
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/superfast-api/**'
+  workflow_dispatch:
+
+jobs:
+  publish-helm:
+    runs-on: ubuntu-latest
+    env:
+      HELM_EXPERIMENTAL_OCI: "1"
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Configure Docker credentials for Artifact Registry
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - name: Set up Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.12.0
+      - name: Log in to Helm OCI registry
+        run: |
+          helm registry login us-central1-docker.pkg.dev \
+            --username oauth2accesstoken \
+            --password-stdin <<< "$(gcloud auth print-access-token)"
+      - name: Package and push Helm chart
+        run: |
+          VERSION=$(grep '^version:' apps/superfast-api/Chart.yaml | awk '{print $2}')
+          helm chart save apps/superfast-api \
+            oci://us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/superfast-charts/superfast-api:$VERSION
+          helm chart push \
+            oci://us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/superfast-charts/superfast-api:$VERSION
+      - name: Confirm publish
+        run: |
+          echo "Published Helm chart superfast-api:$VERSION to Artifact Registry"
