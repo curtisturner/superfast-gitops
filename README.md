@@ -15,3 +15,7 @@ Terraform code for provisioning the cluster and Flux is managed separately.
 - docs/                      # Documentation
 
 Flux will reconcile the cluster state based on this repo.
+
+## Sample application
+
+- apps/simple-nginx: A sample Kustomize application deploying an nginx Deployment and Service. It is referenced in the cluster kustomization to demonstrate a working deployment.
