@@ -1,0 +1,13 @@
+nameOverride: ""
+fullnameOverride: ""
+replicaCount: 1
+
+image:
+  repository: "us-central1-docker.pkg.dev/superfast-460223/superfast-repo/superfast-api"
+  tag: "2025.05.24.01"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
