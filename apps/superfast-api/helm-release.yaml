@@ -1,0 +1,36 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: superfast-api
+  namespace: superfast-api
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: ./apps/superfast-api
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+      interval: 1m
+  values:
+    replicaCount: 2
+    image:
+      repository: us-central1-docker.pkg.dev/sunlit-guild-373521/superfast/superfast
+      tag: "2025.05.24.01"
+      pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 80
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    autoscaling:
+      enabled: false
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
